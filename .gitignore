@@ -1,0 +1,11 @@
+# Runtime and temporary cache folders
+temp_data/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Local virtual environments
+.venv/
+venv/
+env/
+.env
