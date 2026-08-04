@@ -33,6 +33,8 @@ Organizations handling sensitive documentation (financial reports, client record
 *   **Multi-Collage Management:** Allows creation, renaming, and switching between multiple custom workspaces in a single session.
 *   **Advanced Layout Toggles:** Toggle the main canvas between Grid View, List View, and a single-row Filmstrip View (Horizontal Scrolling Layout).
 *   **Granular Page Manipulation:** Adjust orientation (90-degree step rotation) and assign custom textual labels to specific cards.
+*   **Dynamic Math Calculations:** Each card includes an input for entering mathematical expressions (e.g. `100+50-20`). The evaluated total is shown on the card and is synced with the preview modal.
+*   **Collage Grand Total:** The application tracks and sums all card totals dynamically to present a "Grand Total" inside the summary panel.
 *   **Continuous Workspace Zooming:** Scale canvas layout cards from 60% to 140% for better spatial arrangement.
 *   **Integrated Lightbox Preview:** Inspect individual pages in detail using an interactive lightbox modal featuring a continuous zoom slider (30% to 200%) and keyboard navigation support.
 *   **Dynamic Document Generation:** Compile organized pages into standard PDF documents with customizable burned-in bottom footers or single high-resolution grid images with drop shadows and pill badges.
@@ -403,6 +405,11 @@ If the application fails or becomes unresponsive, follow these recovery procedur
 ## 14. Changelog
 
 All notable changes to the GridifyPDF system are recorded below.
+
+### [1.1.0] - 2026-08-04
+#### Added
+*   Mathematical calculation input fields for each card on the canvas grid and in the preview modal.
+*   Real-time Grand Total tracking feature in the export summary panel.
 
 ### [1.0.0] - 2026-07-07
 #### Added

@@ -278,6 +278,8 @@ function addPageToCollage(poolPage) {
         page_num: poolPage.page_num,
         rotation: 0,
         label: '',
+        amount: 0,
+        amountString: '',
         thumbnail_url: poolPage.thumbnail_url
     });
     
@@ -335,7 +337,9 @@ function renderCanvas() {
             <div class="page-card-footer">
                 <div class="page-card-controls">
                     <input type="text" class="page-card-label-input" placeholder="Add label..." value="${p.label || ''}">
-                    <button class="page-card-rotate-btn" title="Rotate Clockwise">
+                    <input type="text" class="page-card-amount-input" placeholder="e.g. 10+5" value="${p.amountString !== undefined ? p.amountString : (p.amount || '')}" style="width: 70px; margin-right: 2px;" title="Enter numbers or math (e.g. 10+5-2)">
+                    <span class="page-card-amount-total" style="font-size: 11px; font-weight: bold; width: 45px; text-align: right; color: var(--primary);" title="Card Total">= ${(p.amount || 0).toFixed(2)}</span>
+                    <button class="page-card-rotate-btn" title="Rotate Clockwise" style="margin-left: auto;">
                         <i class="fa-solid fa-rotate-right"></i>
                     </button>
                 </div>
@@ -376,6 +380,33 @@ function renderCanvas() {
             p.label = labelInput.value;
             saveState(); // Saves state silently on keystroke
         });
+        
+        // 4. Amount Input
+        const amountInput = card.querySelector('.page-card-amount-input');
+        const amountTotal = card.querySelector('.page-card-amount-total');
+        if (amountInput) {
+            amountInput.addEventListener('input', () => {
+                p.amountString = amountInput.value;
+                try {
+                    // Strip anything that isn't a digit, decimal, or basic math operator
+                    const sanitized = amountInput.value.replace(/[^\d\.\+\-\*\/\(\)]/g, '');
+                    p.amount = sanitized ? (new Function('return ' + sanitized)()) : 0;
+                } catch (e) {
+                    p.amount = 0; // Fallback to 0 if expression is incomplete/invalid
+                }
+                if (amountTotal) amountTotal.innerText = '= ' + (p.amount || 0).toFixed(2);
+                saveState();
+                updateSummary();
+                
+                // If preview is open and it's this card, update preview modal too
+                if (activePreviewIdx === idx) {
+                    const prevAmountInput = document.getElementById('preview-amount-input');
+                    const prevAmountTotal = document.getElementById('preview-amount-total');
+                    if (prevAmountInput) prevAmountInput.value = p.amountString;
+                    if (prevAmountTotal) prevAmountTotal.innerText = '= ' + (p.amount || 0).toFixed(2);
+                }
+            });
+        }
         
         // Drag and Drop Events for Reordering
         card.addEventListener('dragstart', (e) => {
@@ -432,12 +463,18 @@ function updateSummary() {
     
     // Count unique source documents in active collage
     const uniqueDocs = new Set();
+    let grandTotal = 0;
     if (activeCollage) {
-        activeCollage.pages.forEach(p => uniqueDocs.add(p.doc_id));
+        activeCollage.pages.forEach(p => {
+            uniqueDocs.add(p.doc_id);
+            grandTotal += (p.amount || 0);
+        });
     }
     
     document.getElementById('summary-total-pages').innerText = totalPages;
     document.getElementById('summary-source-docs').innerText = uniqueDocs.size;
+    const grandTotalEl = document.getElementById('summary-grand-total');
+    if (grandTotalEl) grandTotalEl.innerText = grandTotal.toFixed(2);
 }
 
 // Render everything
@@ -525,6 +562,8 @@ function initEventListeners() {
                 page_num: p.page_num,
                 rotation: 0,
                 label: '',
+                amount: 0,
+                amountString: '',
                 thumbnail_url: p.thumbnail_url
             });
         });
@@ -787,6 +826,14 @@ function openPreviewModal(page, idx) {
     
     info.innerText = `${page.doc_name} — Page ${page.page_num + 1}`;
     
+    // Update amount in preview modal
+    const prevAmountInput = document.getElementById('preview-amount-input');
+    const prevAmountTotal = document.getElementById('preview-amount-total');
+    if (prevAmountInput && prevAmountTotal) {
+        prevAmountInput.value = page.amountString !== undefined ? page.amountString : (page.amount || '');
+        prevAmountTotal.innerText = `= ${(page.amount || 0).toFixed(2)}`;
+    }
+    
     // Update navigation buttons
     const activeCollage = state.collages[state.activeCollageId];
     const pages = activeCollage ? activeCollage.pages : [];
@@ -931,8 +978,7 @@ function initPreviewModalListeners() {
             }
         }
     });
-    
-    rotateLeft.addEventListener('click', (e) => {
+     rotateLeft.addEventListener('click', (e) => {
         e.stopPropagation(); // prevent toggling zoom when clicking rotate buttons
         if (activePreviewIdx !== null) {
             const pages = state.collages[state.activeCollageId].pages;
@@ -949,6 +995,37 @@ function initPreviewModalListeners() {
             renderCanvas();
         }
     });
+    
+    // Bind Preview Amount Input logic
+    const prevAmountInput = document.getElementById('preview-amount-input');
+    const prevAmountTotal = document.getElementById('preview-amount-total');
+    if (prevAmountInput) {
+        prevAmountInput.addEventListener('input', () => {
+            if (activePreviewIdx !== null) {
+                const pages = state.collages[state.activeCollageId].pages;
+                const p = pages[activePreviewIdx];
+                p.amountString = prevAmountInput.value;
+                try {
+                    const sanitized = prevAmountInput.value.replace(/[^\d\.\+\-\*\/\(\)]/g, '');
+                    p.amount = sanitized ? (new Function('return ' + sanitized)()) : 0;
+                } catch (e) {
+                    p.amount = 0;
+                }
+                if (prevAmountTotal) prevAmountTotal.innerText = '= ' + (p.amount || 0).toFixed(2);
+                saveState();
+                updateSummary();
+                
+                // Also update the card input in the canvas in real-time
+                const card = document.querySelector(`.page-card[data-index="${activePreviewIdx}"]`);
+                if (card) {
+                    const cardInput = card.querySelector('.page-card-amount-input');
+                    const cardTotal = card.querySelector('.page-card-amount-total');
+                    if (cardInput) cardInput.value = p.amountString;
+                    if (cardTotal) cardTotal.innerText = '= ' + (p.amount || 0).toFixed(2);
+                }
+            }
+        });
+    }
     
     rotateRight.addEventListener('click', (e) => {
         e.stopPropagation(); // prevent toggling zoom when clicking rotate buttons

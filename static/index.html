@@ -172,6 +172,10 @@
                         <span>Source Docs:</span>
                         <span id="summary-source-docs">0</span>
                     </div>
+                    <div class="summary-row">
+                        <span>Grand Total:</span>
+                        <span id="summary-grand-total">0.00</span>
+                    </div>
                 </div>
                 
                 <button class="btn btn-primary btn-large btn-glow" id="btn-export">
@@ -216,8 +220,15 @@
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
             </div>
-            <div class="preview-details">
-                <p id="preview-modal-doc-info">Document Name (Page X)</p>
+            <div class="preview-details" style="display: flex; flex-direction: column; align-items: center;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px; max-width: 600px;">
+                    <p id="preview-modal-doc-info" style="margin: 0; font-weight: 500;">Document Name (Page X)</p>
+                    <div style="display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <label for="preview-amount-input" style="font-size: 12px; color: var(--text-secondary);">Calculation:</label>
+                        <input type="text" id="preview-amount-input" style="width: 120px; padding: 4px 8px; font-size: 13px; background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px;" placeholder="e.g. 10+50">
+                        <span id="preview-amount-total" style="font-weight: 600; color: var(--primary); font-size: 14px; min-width: 60px;">= 0.00</span>
+                    </div>
+                </div>
                 <div class="preview-actions" style="display: flex; gap: 20px; align-items: center; justify-content: center; width: 100%; flex-wrap: wrap;">
                     <!-- Zoom Controls inside Preview -->
                     <div class="preview-zoom-controls" style="display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border-color);">
@@ -251,6 +262,6 @@
         </div>
     </div>
     
-    <script src="/static/js/app.js?v=5"></script>
+    <script src="/static/js/app.js?v=8"></script>
 </body>
 </html>
