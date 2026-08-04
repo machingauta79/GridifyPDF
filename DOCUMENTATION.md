@@ -166,7 +166,7 @@ python --version
 python -m pip install --upgrade pip
 
 # Navigate to application folder
-cd "c:\Users\Martin.Chingwaru\OneDrive - VSO\Documents\Finance-Agent-Lab\.agents\skills\budget review\Document Reviewer System"
+cd "c:\Users\Martin.Chingwaru\OneDrive - VSO\Documents\Finance-Agent-Lab\.agents\skills\budget review\GridifyPDF"
 
 # Install requirements
 pip install -r requirements.txt
@@ -201,6 +201,14 @@ To safely shut down the web server:
 2. Press **`Ctrl + C`** on your keyboard.
 3. If prompted to "Terminate batch job? (Y/N)", type **`Y`** and press **`Enter`**.
 
+### 5.3 Pushing Project to GitHub via the Batch Helper
+We have provided an automated Git repository configuration and push script: **`push_to_github.bat`**.
+
+1. Navigate to the project root directory in File Explorer.
+2. Double-click **`push_to_github.bat`**.
+3. A command window will launch, verify your local git workspace, add the origin remote path (`https://github.com/machingauta79/GridifyPDF.git`), and push your files.
+4. If prompted with a browser popup to authorize GitHub, sign in to complete the transfer.
+
 ---
 
 ## 6. User Guide
@@ -220,9 +228,9 @@ stateDiagram-v2
 ```
 
 #### Step 1: Uploading Documents
-Drag and drop your PDF files into the dashed region in the left-hand panel. Alternatively, click inside the upload box to open a standard file selection dialog. Uploaded documents will render as expandable folders containing visual page thumbnails.
+Drag and drop your PDF files into the dashed region in the left-hand panel. Alternatively, click inside the upload box to open a standard file selection dialog. Uploaded documents will render as expandable folders containing visual page thumbnails. The left sidebar panel and page grids include full vertical scrollability (`overflow-y: auto`) with bottom clearance padding, allowing you to scroll up and down effortlessly to view every extracted page from Page 1 to Page N without any clipping.
 
-#### Step 2: populating the Workbench
+#### Step 2: Populating the Workbench
 To add pages to your current active collage:
 *   Click the thumbnail of a specific page to add it individually.
 *   Click **Add All to Collage** to copy every page of all uploaded documents onto the canvas grid at once.
@@ -236,7 +244,10 @@ Drag page cards around the canvas workspace. The grid will shift dynamically to 
 
 #### Step 5: Zooming and Previewing Pages
 *   **Canvas Scale:** Slide or click the zoom controls (`-` / `+`) at the top of the canvas to scale all cards in the workbench for a wider overview.
-*   **Full Screen inspection:** Click the magnifying glass icon on any card to launch the preview lightbox. Use the range slider (30% to 200%) to zoom, and browse pages end-to-end using the arrow buttons or keyboard Arrow keys.
+*   **Full Screen Inspection:** Click the magnifying glass icon on any card to launch the preview lightbox.
+    *   **Scroll View (Fit Width):** Opens by default at full readable document width starting at `scrollTop = 0`. Scroll up and down through the page from top to bottom with your mouse wheel or touchpad.
+    *   **Fit Page:** Fits the entire document height inside your window view without scrolling.
+    *   **Zoom Slider:** Dynamically scale pages from 30% to 200%, or click the image to toggle view modes. Browse pages end-to-end using the arrow buttons or keyboard Arrow keys.
 
 #### Step 6: Compiling and Downloading
 Navigate to the **Export Settings** panel on the right side:
@@ -251,10 +262,11 @@ Navigate to the **Export Settings** panel on the right side:
 
 ### 7.1 Directory Tree
 ```text
-Document Reviewer System/
+GridifyPDF/
 │
 ├── GridifyPDF.bat              # Windows Launcher script
-├── main.py                     # Core FastAPI Application
+├── push_to_github.bat          # GitHub Repository Push script
+├── main.py                     # Core FastAPI Application & Auto-Browser Thread
 ├── requirements.txt            # Project Dependencies
 ├── DOCUMENTATION.md            # System Technical Documentation
 │
@@ -265,23 +277,24 @@ Document Reviewer System/
 └── static/                     # Web UI static assets
     ├── index.html              # Frontend Layout and UI Elements
     ├── css/
-    │   └── style.css           # UI Design System CSS Rules
+    │   └── style.css           # UI Design System & Scroll CSS Rules
     └── js/
-        └── app.js              # State Controller JS Engine
+        └── app.js              # State Controller JS Engine & Preview Lightbox
 ```
 
 ### 7.2 Source Code Modules
 
 #### 7.2.1 Backend Server (`main.py`)
-Responsible for exposing endpoints and running PDF and image conversions:
+Responsible for exposing endpoints, running PDF and image conversions, and background server startup:
+*   **Background Browser Launcher:** Starts a daemon thread upon launch that waits 1.5 seconds for Uvicorn binding before automatically opening `http://127.0.0.1:8000` in the user's default browser.
 *   **Startup Lifecycle Event:** Empties all cached uploads and thumbnails in `temp_data/` to keep clean resources.
 *   **`/api/upload` (POST):** Receives file streams, writes them to disk, generates unique UUID directory scopes, renders 100 DPI thumbnails, and outputs metadata JSON arrays.
 *   **`/api/export` (POST):** Processes JSON list parameters containing page order indexes, rotations, and labels. Generates either a structured vector PDF (using `fitz`) or a raster grid (using `PIL`).
 
 #### 7.2.2 Static Frontend Assets (`static/`)
 Controls the user interface and state logic:
-*   **`style.css`:** Implements dark slate variables (`#0b0f19`), flex panels, responsive CSS variables (`--card-width`), and `:has` CSS pseudo-selectors to handle scroll overflows.
-*   **`app.js`:** Implements native HTML5 Drag and Drop events (`dragstart`, `dragover`, `drop`, `dragend`) for coordinate sorting. Updates `localStorage` objects on every action.
+*   **`style.css`:** Implements dark slate variables (`#0b0f19`), flex panels, responsive CSS variables (`--card-width`), scrollable page pool grids (`.pool-doc-pages`), and flexbox `margin: auto` rules to ensure full top-to-bottom preview scrollability without clipping.
+*   **`app.js`:** Implements native HTML5 Drag and Drop events (`dragstart`, `dragover`, `drop`, `dragend`) for coordinate sorting, preview modal view mode controllers (Scroll View / Fit Page), and automatic `scrollTop = 0` page resets. Updates `localStorage` objects on every action.
 
 ---
 
@@ -331,6 +344,7 @@ The application has been optimized to handle standard business files:
 | **Browser displays "Connection Refused"** | The FastAPI server is not running or crashed. | Check the cmd console. If stopped, run `GridifyPDF.bat` or `python main.py` again. |
 | **Card image is blurry in preview lightbox** | Low resolution cached thumbnail. | Close preview and adjust DPI scale configurations inside the uploader modules. |
 | **Page rotation does not render in exported PDF** | PDF rotation values are not multiples of 90. | Check the JSON export payload. PyMuPDF only supports values of `0, 90, 180, 270`. |
+| **"Clear All" or buttons fail to trigger** | Browser cache loading stale files. | Perform a hard refresh (**`Ctrl + F5`** or **`Shift + F5`**) to load the latest client logic. |
 
 ---
 

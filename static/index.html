@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=5">
 </head>
 <body>
     <div class="app-container">
@@ -33,7 +33,10 @@
             
             <!-- Uploaded Documents Pool -->
             <div class="pool-section">
-                <h3>Uploaded Pages</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="margin-bottom: 0;">Uploaded Pages</h3>
+                    <span id="btn-clear-pool" style="font-size: 11px; color: var(--text-secondary); cursor: pointer; transition: color 0.2s;" title="Clear all uploaded documents">Clear All</span>
+                </div>
                 <div class="pages-pool" id="pages-pool">
                     <div class="pool-empty-state">
                         <i class="fa-solid fa-file-pdf"></i>
@@ -217,8 +220,9 @@
                 <p id="preview-modal-doc-info">Document Name (Page X)</p>
                 <div class="preview-actions" style="display: flex; gap: 20px; align-items: center; justify-content: center; width: 100%; flex-wrap: wrap;">
                     <!-- Zoom Controls inside Preview -->
-                    <div class="preview-zoom-controls" style="display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-                        <button class="view-toggle-btn active" id="btn-prev-zoom-fit" title="Fit to Screen" style="padding: 4px 8px; font-size: 11px;">Fit</button>
+                    <div class="preview-zoom-controls" style="display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <button class="view-toggle-btn active" id="btn-prev-zoom-scroll" title="Scrollable View (Fit Width)" style="padding: 4px 10px; font-size: 11px;">Scroll View</button>
+                        <button class="view-toggle-btn" id="btn-prev-zoom-fit" title="Fit to Screen (Full Page)" style="padding: 4px 10px; font-size: 11px;">Fit Page</button>
                         <div style="width: 1px; height: 16px; background-color: var(--border-color);"></div>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <i class="fa-solid fa-magnifying-glass-minus" style="font-size: 11px; color: var(--text-secondary);"></i>
@@ -247,6 +251,6 @@
         </div>
     </div>
     
-    <script src="/static/js/app.js"></script>
+    <script src="/static/js/app.js?v=5"></script>
 </body>
 </html>

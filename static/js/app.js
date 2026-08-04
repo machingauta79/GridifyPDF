@@ -203,11 +203,22 @@ function renderPagesPool() {
                 <i class="fa-solid fa-file-pdf"></i>
                 <span class="pool-doc-name" title="${doc.name}">${doc.name}</span>
             </div>
-            <div>
+            <div class="pool-doc-actions" style="display: flex; align-items: center; gap: 8px;">
                 <span class="pool-doc-count">${doc.pages.length} pgs</span>
+                <button class="btn-delete-doc" title="Remove document" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 2px 4px; border-radius: 4px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
                 <i class="fa-solid fa-chevron-down pool-doc-chevron"></i>
             </div>
         `;
+        
+        const deleteBtn = headerEl.querySelector('.btn-delete-doc');
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // prevent collapsing/expanding accordion
+            if (confirm(`Are you sure you want to remove "${doc.name}" from your uploaded pages?`)) {
+                removeDocFromPool(docId);
+            }
+        });
         
         const pagesEl = document.createElement('div');
         pagesEl.className = 'pool-doc-pages';
@@ -242,6 +253,14 @@ function renderPagesPool() {
         groupEl.appendChild(pagesEl);
         pool.appendChild(groupEl);
     });
+}
+
+// Remove single document and its pages from the pool
+function removeDocFromPool(docId) {
+    state.uploadedPages = state.uploadedPages.filter(p => p.doc_id !== docId);
+    saveState();
+    renderPagesPool();
+    showNotification("Removed document from upload history.");
 }
 
 // Add page from pool into the active collage workspace
@@ -515,6 +534,22 @@ function initEventListeners() {
         showNotification(`Added all ${state.uploadedPages.length} pages to the collage.`);
     });
     
+    // Clear Pool button
+    const btnClearPool = document.getElementById('btn-clear-pool');
+    if (btnClearPool) {
+        btnClearPool.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("Clear all clicked, current pool size:", state.uploadedPages.length);
+            if (confirm("Are you sure you want to clear all uploaded pages and history?")) {
+                state.uploadedPages = [];
+                saveState();
+                renderPagesPool();
+                showNotification("Cleared upload history.");
+            }
+        });
+    }
+    
     // Clear Canvas button
     const btnClear = document.getElementById('btn-clear-canvas');
     btnClear.addEventListener('click', () => {
@@ -717,15 +752,24 @@ function openPreviewModal(page, idx) {
     title.innerText = `Preview: ${page.doc_name}`;
     img.src = page.thumbnail_url;
     
-    // Reset zoom state on open to fit
     const imgContainer = modal.querySelector('.preview-img-container');
+    const previewBody = modal.querySelector('.preview-body');
+    
+    // Reset classes to default Scroll View (Fit Width)
     if (imgContainer) {
-        imgContainer.classList.remove('zoomed');
+        imgContainer.classList.remove('fit-page', 'custom-zoom', 'zoomed');
         imgContainer.style.transform = `rotate(${page.rotation}deg)`;
     }
     
-    // Reset image width style
+    // Reset image inline styles
     img.style.width = '';
+    img.style.height = '';
+    
+    // Reset scrollbar position to the very top
+    if (previewBody) {
+        previewBody.scrollTop = 0;
+        previewBody.scrollLeft = 0;
+    }
     
     // Reset slider to 100%
     const slider = document.getElementById('preview-zoom-slider');
@@ -735,11 +779,11 @@ function openPreviewModal(page, idx) {
         valEl.innerText = '100%';
     }
     
-    // Reset active class on Fit button
+    // Update toolbar toggle states
+    const btnScroll = document.getElementById('btn-prev-zoom-scroll');
     const btnFit = document.getElementById('btn-prev-zoom-fit');
-    if (btnFit) {
-        btnFit.classList.add('active');
-    }
+    if (btnScroll) btnScroll.classList.add('active');
+    if (btnFit) btnFit.classList.remove('active');
     
     info.innerText = `${page.doc_name} — Page ${page.page_num + 1}`;
     
@@ -767,32 +811,63 @@ function initPreviewModalListeners() {
     const prevBtn = document.getElementById('btn-preview-prev');
     const nextBtn = document.getElementById('btn-preview-next');
     const imgContainer = modal ? modal.querySelector('.preview-img-container') : null;
+    const previewBody = modal ? modal.querySelector('.preview-body') : null;
     
     // Zoom controls
+    const btnScroll = document.getElementById('btn-prev-zoom-scroll');
     const btnFit = document.getElementById('btn-prev-zoom-fit');
     const slider = document.getElementById('preview-zoom-slider');
     const valEl = document.getElementById('preview-zoom-val');
     const img = document.getElementById('preview-modal-img');
     
-    if (!modal || !closeBtn || !rotateLeft || !rotateRight || !prevBtn || !nextBtn || !btnFit || !slider || !valEl || !img) return;
+    if (!modal || !closeBtn || !rotateLeft || !rotateRight || !prevBtn || !nextBtn || !slider || !valEl || !img) return;
+    
+    const setScrollView = () => {
+        if (!imgContainer) return;
+        imgContainer.classList.remove('fit-page', 'custom-zoom');
+        img.style.width = '';
+        img.style.height = '';
+        slider.value = 100;
+        valEl.innerText = '100%';
+        if (btnScroll) btnScroll.classList.add('active');
+        if (btnFit) btnFit.classList.remove('active');
+        if (previewBody) previewBody.scrollTop = 0;
+    };
+    
+    const setFitPage = () => {
+        if (!imgContainer) return;
+        imgContainer.classList.remove('custom-zoom');
+        imgContainer.classList.add('fit-page');
+        img.style.width = '';
+        img.style.height = '';
+        slider.value = 100;
+        valEl.innerText = '100%';
+        if (btnFit) btnFit.classList.add('active');
+        if (btnScroll) btnScroll.classList.remove('active');
+    };
     
     const applySliderZoom = () => {
         if (!imgContainer) return;
-        const val = slider.value;
+        const val = parseInt(slider.value, 10);
         valEl.innerText = `${val}%`;
         
-        imgContainer.classList.add('zoomed');
-        img.style.width = `${val}%`;
+        imgContainer.classList.remove('fit-page');
+        imgContainer.classList.add('custom-zoom');
         
-        // Remove active class from Fit button
-        btnFit.classList.remove('active');
+        // Base width is 850px for 100%
+        const baseW = 850;
+        img.style.width = `${baseW * (val / 100)}px`;
+        img.style.height = 'auto';
+        
+        if (btnScroll) btnScroll.classList.remove('active');
+        if (btnFit) btnFit.classList.remove('active');
     };
     
     const closePreview = () => {
         modal.classList.remove('active');
         activePreviewIdx = null;
         if (imgContainer) {
-            imgContainer.classList.remove('zoomed');
+            imgContainer.classList.remove('fit-page', 'custom-zoom');
         }
         img.style.width = '';
     };
@@ -806,41 +881,21 @@ function initPreviewModalListeners() {
         }
     });
     
+    // Bind buttons
+    if (btnScroll) btnScroll.addEventListener('click', setScrollView);
+    if (btnFit) btnFit.addEventListener('click', setFitPage);
+    
     // Bind slider input events
     slider.addEventListener('input', applySliderZoom);
     slider.addEventListener('change', applySliderZoom);
     
-    // Fit button resets zoom state
-    btnFit.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (imgContainer) {
-            imgContainer.classList.remove('zoomed');
-        }
-        img.style.width = '';
-        slider.value = 100;
-        valEl.innerText = '100%';
-        btnFit.classList.add('active');
-    });
-    
-    // Click image container to cycle zoom scroll states
+    // Click image container to toggle between Scroll View and Fit Page
     if (imgContainer) {
         imgContainer.addEventListener('click', (e) => {
-            const currentVal = parseInt(slider.value);
-            if (!imgContainer.classList.contains('zoomed')) {
-                // Fit -> go to 100%
-                slider.value = 100;
-                applySliderZoom();
-            } else if (currentVal >= 100 && currentVal < 150) {
-                // 100% -> go to 150%
-                slider.value = 150;
-                applySliderZoom();
+            if (imgContainer.classList.contains('fit-page')) {
+                setScrollView();
             } else {
-                // Reset back to Fit
-                imgContainer.classList.remove('zoomed');
-                img.style.width = '';
-                slider.value = 100;
-                valEl.innerText = '100%';
-                btnFit.classList.add('active');
+                setFitPage();
             }
         });
     }
