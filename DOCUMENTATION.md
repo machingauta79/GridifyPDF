@@ -335,18 +335,64 @@ The application has been optimized to handle standard business files:
 
 ---
 
-## 10. Error Handling & Troubleshooting
+## 10. Error Handling & Troubleshooting (When App Is Not Running)
 
-### 10.1 Troubleshooting Matrix
+If **GridifyPDF** fails to start, crashes immediately, or displays a "Connection Refused" page, follow this simple step-by-step diagnostic workflow:
 
-| Error Message / Sympton | Probable Cause | Action / Recovery Procedure |
+### 10.1 Step-by-Step Diagnostic & Recovery Workflow
+
+#### Step 1: Verify Python Installation & Environment PATH
+* **Symptom:** Double-clicking `GridifyPDF.bat` immediately closes the command window without launching the web server.
+* **Diagnosis:** Python is either not installed or not added to your Windows PATH environment variable.
+* **Solution:**
+  1. Open Command Prompt (`cmd.exe`) and type: `python --version`
+  2. If you see `'python' is not recognized...`, download Python 3.10+ from [python.org](https://www.python.org/downloads/).
+  3. During installation, **check the checkbox: "Add python.exe to PATH"**.
+
+#### Step 2: Verify Python Package Dependencies
+* **Symptom:** Command prompt shows `ModuleNotFoundError: No module named 'fastapi'` or `pymupdf`.
+* **Diagnosis:** Required dependencies are missing from your Python environment.
+* **Solution:**
+  1. Open Command Prompt inside the `GridifyPDF` project folder.
+  2. Run: `python -m pip install -r requirements.txt`
+  3. Wait for all packages (`pymupdf`, `fastapi`, `uvicorn`, `python-multipart`, `pillow`, `httpx2`) to report successful installation.
+
+#### Step 3: Clear Port 8000 Conflicts
+* **Symptom:** Terminal output says `[ERROR] [Errno 10048] error while attempting to bind on address ('127.0.0.1', 8000)`.
+* **Diagnosis:** Another background application (e.g., another web server or zombie process) is occupying port `8000`.
+* **Solution (Option A):** Open PowerShell as Administrator and force-terminate the occupying process:
+  ```powershell
+  Stop-Process -Id (Get-NetTCPConnection -LocalPort 8000).OwningProcess -Force
+  ```
+* **Solution (Option B):** Open `main.py` in any text editor, scroll to the bottom line, and change `port=8000` to `port=8080`. Then navigate to `http://127.0.0.1:8080`.
+
+#### Step 4: Run Manual Verification from Command Line
+* **Symptom:** Batch script closes too fast to read the error message.
+* **Solution:**
+  1. Open Command Prompt (`cmd.exe`).
+  2. Navigate to the app folder:
+     ```cmd
+     cd "c:\Users\Martin.Chingwaru\OneDrive - VSO\Documents\Finance-Agent-Lab\.agents\skills\budget review\GridifyPDF"
+     ```
+  3. Execute `python main.py` directly.
+  4. The window will stay open and print exact exception stack traces if a crash occurs.
+
+#### Step 5: Manual Browser Navigation
+* **Symptom:** The server starts cleanly in the terminal (`Uvicorn running on http://127.0.0.1:8000`), but no browser window opens automatically.
+* **Diagnosis:** Windows default browser association is restricted by system policy.
+* **Solution:** Open Google Chrome, Microsoft Edge, or Firefox manually and type `http://127.0.0.1:8000` into the address bar.
+
+---
+
+### 10.2 Common Error Troubleshooting Matrix
+
+| Error Message / Symptom | Probable Cause | Action / Recovery Procedure |
 | :--- | :--- | :--- |
-| **`RuntimeError: The starlette.testclient module requires the httpx2 package`** | Missing test dependencies. | Run `pip install httpx2` in your cmd console. |
-| **`AttributeError: 'PageConfig' object has no attribute 'doc_filename'`** | Outdated main script version. | Ensure `main.py` is updated to include `doc_filename` in the Pydantic schema. |
-| **Browser displays "Connection Refused"** | The FastAPI server is not running or crashed. | Check the cmd console. If stopped, run `GridifyPDF.bat` or `python main.py` again. |
-| **Card image is blurry in preview lightbox** | Low resolution cached thumbnail. | Close preview and adjust DPI scale configurations inside the uploader modules. |
-| **Page rotation does not render in exported PDF** | PDF rotation values are not multiples of 90. | Check the JSON export payload. PyMuPDF only supports values of `0, 90, 180, 270`. |
-| **"Clear All" or buttons fail to trigger** | Browser cache loading stale files. | Perform a hard refresh (**`Ctrl + F5`** or **`Shift + F5`**) to load the latest client logic. |
+| **`RuntimeError: ... requires httpx2`** | Missing test dependencies. | Run `pip install httpx2` in console. |
+| **`AttributeError: 'PageConfig' has no attribute 'doc_filename'`** | Outdated main script version. | Ensure `main.py` has `doc_filename` in Pydantic schema. |
+| **Browser displays "Connection Refused"** | FastAPI server is not running. | Run `GridifyPDF.bat` or `python main.py`. |
+| **Card image is blurry in preview lightbox** | Low resolution cached thumbnail. | Close preview and adjust DPI scale configurations inside uploader. |
+| **"Clear All" or buttons fail to trigger** | Browser cache loading stale JS. | Perform a hard refresh (**`Ctrl + F5`** or **`Shift + F5`**). |
 
 ---
 
