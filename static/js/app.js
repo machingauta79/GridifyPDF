@@ -320,6 +320,9 @@ function renderCanvas() {
             <div class="page-card-header">
                 <span class="page-card-title" title="${p.doc_name}">${p.doc_name}</span>
                 <div style="display: flex; align-items: center;">
+                    <button class="page-card-print" title="Print Page Card">
+                        <i class="fa-solid fa-print"></i>
+                    </button>
                     <button class="page-card-zoom" title="Zoom/Preview Page">
                         <i class="fa-solid fa-magnifying-glass-plus"></i>
                     </button>
@@ -347,7 +350,13 @@ function renderCanvas() {
         `;
         
         // Listeners for Card Operations
-        // 0. Zoom/Preview Page
+        // 0. Print Page Card
+        card.querySelector('.page-card-print').addEventListener('click', (e) => {
+            e.stopPropagation();
+            printPageCard(p);
+        });
+
+        // 1. Zoom/Preview Page
         card.querySelector('.page-card-zoom').addEventListener('click', (e) => {
             e.stopPropagation();
             openPreviewModal(p, idx);
@@ -855,6 +864,7 @@ function initPreviewModalListeners() {
     const closeBtn = document.getElementById('btn-preview-close');
     const rotateLeft = document.getElementById('btn-preview-rotate-left');
     const rotateRight = document.getElementById('btn-preview-rotate-right');
+    const printBtn = document.getElementById('btn-preview-print');
     const prevBtn = document.getElementById('btn-preview-prev');
     const nextBtn = document.getElementById('btn-preview-next');
     const imgContainer = modal ? modal.querySelector('.preview-img-container') : null;
@@ -1044,4 +1054,59 @@ function initPreviewModalListeners() {
             renderCanvas();
         }
     });
+
+    if (printBtn) {
+        printBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (activePreviewIdx !== null) {
+                const pages = state.collages[state.activeCollageId].pages;
+                const p = pages[activePreviewIdx];
+                if (p) printPageCard(p);
+            }
+        });
+    }
+}
+
+// Helper function to escape HTML special characters
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// Print Previewed Card
+function printPageCard(page) {
+    const printArea = document.getElementById('print-card-area');
+    if (!printArea || !page) return;
+    
+    const hasLabel = page.label && page.label.trim().length > 0;
+    const hasAmount = page.amount !== undefined && page.amount !== null && page.amount !== 0;
+    const amountStr = page.amountString || (page.amount ? page.amount.toString() : '');
+    const totalVal = (page.amount || 0).toFixed(2);
+    
+    printArea.innerHTML = `
+        <div class="print-card-header">
+            <h2>${escapeHtml(page.doc_name)}</h2>
+            <p>Page ${page.page_num + 1}</p>
+        </div>
+        <div class="print-card-body">
+            <div style="transform: rotate(${page.rotation || 0}deg); display: flex; justify-content: center; align-items: center;">
+                <img src="${page.thumbnail_url}" alt="${escapeHtml(page.doc_name)}" />
+            </div>
+        </div>
+        <div class="print-card-footer">
+            <div>
+                ${hasLabel ? `<span class="print-card-badge">Label: ${escapeHtml(page.label.trim())}</span>` : ''}
+            </div>
+            <div>
+                ${(hasAmount || amountStr) ? `<span class="print-card-badge">Calculation: ${escapeHtml(amountStr)} = ${totalVal}</span>` : ''}
+            </div>
+        </div>
+    `;
+    
+    window.print();
 }

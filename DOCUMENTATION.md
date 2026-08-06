@@ -37,6 +37,7 @@ Organizations handling sensitive documentation (financial reports, client record
 *   **Collage Grand Total:** The application tracks and sums all card totals dynamically to present a "Grand Total" inside the summary panel.
 *   **Continuous Workspace Zooming:** Scale canvas layout cards from 60% to 140% for better spatial arrangement.
 *   **Integrated Lightbox Preview:** Inspect individual pages in detail using an interactive lightbox modal featuring a continuous zoom slider (30% to 200%) and keyboard navigation support.
+*   **Individual Card Printing:** Print previewed cards directly from the lightbox preview modal or canvas cards with clean, dedicated `@media print` paper formatting.
 *   **Dynamic Document Generation:** Compile organized pages into standard PDF documents with customizable burned-in bottom footers or single high-resolution grid images with drop shadows and pill badges.
 *   **100% Local & Offline Processing:** Operates independently of internet connectivity with zero external API dependencies.
 
@@ -244,12 +245,13 @@ Drag page cards around the canvas workspace. The grid will shift dynamically to 
 *   **Rotation:** Click the rotate icon on any card to rotate it 90 degrees clockwise.
 *   **Labeling:** Type into the input block directly under any card to add a label. Labels are automatically saved.
 
-#### Step 5: Zooming and Previewing Pages
+#### Step 5: Zooming, Previewing, and Printing Cards
 *   **Canvas Scale:** Slide or click the zoom controls (`-` / `+`) at the top of the canvas to scale all cards in the workbench for a wider overview.
 *   **Full Screen Inspection:** Click the magnifying glass icon on any card to launch the preview lightbox.
     *   **Scroll View (Fit Width):** Opens by default at full readable document width starting at `scrollTop = 0`. Scroll up and down through the page from top to bottom with your mouse wheel or touchpad.
     *   **Fit Page:** Fits the entire document height inside your window view without scrolling.
     *   **Zoom Slider:** Dynamically scale pages from 30% to 200%, or click the image to toggle view modes. Browse pages end-to-end using the arrow buttons or keyboard Arrow keys.
+*   **Card Printing:** Click the **Print Card** button inside the preview modal or the print icon on any canvas card header to print a clean hardcopy of the card, retaining rotation, document title, page number, label, and calculation summary.
 
 #### Step 6: Compiling and Downloading
 Navigate to the **Export Settings** panel on the right side:
@@ -295,8 +297,8 @@ Responsible for exposing endpoints, running PDF and image conversions, and backg
 
 #### 7.2.2 Static Frontend Assets (`static/`)
 Controls the user interface and state logic:
-*   **`style.css`:** Implements dark slate variables (`#0b0f19`), flex panels, responsive CSS variables (`--card-width`), scrollable page pool grids (`.pool-doc-pages`), and flexbox `margin: auto` rules to ensure full top-to-bottom preview scrollability without clipping.
-*   **`app.js`:** Implements native HTML5 Drag and Drop events (`dragstart`, `dragover`, `drop`, `dragend`) for coordinate sorting, preview modal view mode controllers (Scroll View / Fit Page), and automatic `scrollTop = 0` page resets. Updates `localStorage` objects on every action.
+*   **`style.css`:** Implements dark slate variables (`#0b0f19`), flex panels, responsive CSS variables (`--card-width`), scrollable page pool grids (`.pool-doc-pages`), and dedicated `@media print` rules for individual card hardcopy printing without background application chrome.
+*   **`app.js`:** Implements native HTML5 Drag and Drop events (`dragstart`, `dragover`, `drop`, `dragend`) for coordinate sorting, preview modal view mode controllers (Scroll View / Fit Page), automatic `scrollTop = 0` page resets, and `printPageCard(page)` browser printing handlers. Updates `localStorage` objects on every action.
 
 ---
 
@@ -451,6 +453,11 @@ If the application fails or becomes unresponsive, follow these recovery procedur
 ## 14. Changelog
 
 All notable changes to the GridifyPDF system are recorded below.
+
+### [1.2.0] - 2026-08-06
+#### Added
+*   Individual Card Printing feature allowing users to print previewed cards directly from the lightbox preview modal or the canvas card header.
+*   Dedicated `@media print` paper stylesheets that format printed cards cleanly with document titles, page numbers, card rotation, and calculation summaries without application UI background elements.
 
 ### [1.1.0] - 2026-08-04
 #### Added

@@ -1103,8 +1103,9 @@ body {
     user-select: none;
 }
 
-/* Page Card Zoom Icon */
-.page-card-zoom {
+/* Page Card Zoom & Print Icons */
+.page-card-zoom,
+.page-card-print {
     background: none;
     border: none;
     color: var(--text-muted);
@@ -1115,7 +1116,8 @@ body {
     margin-right: 8px;
 }
 
-.page-card-zoom:hover {
+.page-card-zoom:hover,
+.page-card-print:hover {
     color: var(--primary);
 }
 
@@ -1310,4 +1312,104 @@ body {
 .btn-delete-doc:hover {
     color: #ef4444 !important;
     background: rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Individual Card Print Layout & Print Media Styles */
+.print-card-area {
+    display: none;
+}
+
+@media print {
+    @page {
+        size: auto;
+        margin: 10mm;
+    }
+    
+    html, body {
+        background: #ffffff !important;
+        color: #111827 !important;
+        overflow: visible !important;
+        height: auto !important;
+    }
+    
+    .app-container,
+    .modal,
+    .loading-overlay,
+    .notification-container,
+    .preview-nav-btn {
+        display: none !important;
+    }
+    
+    .print-card-area {
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        width: 100%;
+        min-height: 100vh;
+        padding: 20px;
+        box-sizing: border-box;
+        background: #ffffff !important;
+        color: #111827 !important;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .print-card-header {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 24px;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 12px;
+    }
+
+    .print-card-header h2 {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 4px;
+        color: #111827;
+    }
+
+    .print-card-header p {
+        font-size: 14px;
+        color: #4b5563;
+    }
+
+    .print-card-body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        max-height: 75vh;
+        margin: 20px 0;
+    }
+
+    .print-card-body img {
+        max-width: 100%;
+        max-height: 70vh;
+        object-fit: contain;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .print-card-footer {
+        width: 100%;
+        margin-top: 24px;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+    }
+
+    .print-card-badge {
+        display: inline-block;
+        background: #f3f4f6;
+        border: 1px solid #d1d5db;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-weight: 600;
+        color: #1f2937;
+    }
 }
